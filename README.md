@@ -7,6 +7,9 @@ Code for testing the stochasticity of ALE.
 * [numpy]()
 * [atari-py](https://github.com/openai/atari-py)
 
+Note that atari-py by OpenAI should be the same as [the original ALE interface]( https://github.com/bbitmaster/ale_python_interface) (at least for the features we care about here).
+You can also import [the original ALE interface]( https://github.com/bbitmaster/ale_python_interface) package to run the code.
+
 You can install them by:
 ```
 pip install numpy atari-py
