@@ -1,6 +1,9 @@
 import numpy as np
 import atari_py
 
+# test = 'loadROM'
+test = 'restoreState'
+
 frame_skip = 4
 bunch = 200
 sequence = 200
@@ -33,11 +36,12 @@ def main():
 
         env_father = atari_py.ALEInterface()
         env_father.setFloat('repeat_action_probability'.encode('utf-8'), 0.0)
-        env_father.setInt(b'random_seed', 1)
+        env_father.setInt(b'random_seed', 3)
         env_father.loadROM(game_path)
         env_father.reset_game()
 
-        state_after_reset = env_father.cloneState()
+        if test in ['restoreState']:
+            state_after_reset = env_father.cloneState()
 
         '''generate a sequence of actions'''
         action_sequence = np.random.randint(
@@ -53,9 +57,16 @@ def main():
             env_temp = atari_py.ALEInterface()
             env_temp.setFloat('repeat_action_probability'.encode('utf-8'), 0.0)
             env_temp.setInt(b'random_seed', bunch_i)
-            env_temp.loadROM(game_path)
-            env_temp.reset_game()
-            # env_temp.restoreState(state_after_reset)
+            if test in ['loadROM']:
+                env_temp.loadROM(game_path)
+                env_temp.reset_game()
+            elif test in ['restoreState']:
+                env_temp.loadROM(game_path) # restoreState without calling loadROM first will cause Segmentation fault (core dumped)
+                env_temp.restoreState(state_after_reset)
+
+            # just to make sure
+            env_temp.setFloat('repeat_action_probability'.encode('utf-8'), 0.0)
+            env_temp.setInt(b'random_seed', bunch_i)
 
             for sequence_i in range(sequence):
                 for frame_skip_i in range(frame_skip):
