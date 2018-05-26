@@ -15,6 +15,7 @@ def main():
         'grouped_num':[],
         'distribution':[],
     }
+    result_str = ''
 
     # game_list = ['air_raid-n', 'alien', 'amidar', 'assault', 'asterix', 'asteroids', 'atlantis']
     # game_list = ['bank_heist', 'battle_zone', 'beam_rider', 'berzerk-n', 'bowling', 'boxing', 'breakout', 'carnival-n']
@@ -106,11 +107,14 @@ def main():
                 distribution += [1]
 
         grouped_num = len(bunch_obs)
-        print('game:{} grouped_num:{} distribution:{}'.format(
+        result_str = '{}game:{} grouped_num:{} distribution:{} \n'.format(
+            result_str,
             game,
             grouped_num,
             distribution,
-        ))
+        )
+
+    print(result_str)
 
 if __name__ == "__main__":
     main()
