@@ -1,12 +1,13 @@
 import numpy as np
-import atari_py
+
+from ale_python_interface import ALEInterface
 
 test = 'loadROM'
 # test = 'restoreState'
 
 frame_skip = 4
 bunch = 200
-sequence = 500
+sequence = 50
 
 def main():
     result = {
@@ -33,9 +34,11 @@ def main():
             '''games that are not in the nature DQN list'''
             continue
 
+        import atari_py
         game_path = atari_py.get_game_path(game)
+        game_path = str.encode(game_path)
 
-        env_father = atari_py.ALEInterface()
+        env_father = ALEInterface()
         env_father.setFloat('repeat_action_probability'.encode('utf-8'), 0.0)
         env_father.setInt(b'random_seed', 3)
         env_father.loadROM(game_path)
@@ -55,7 +58,7 @@ def main():
         samples = []
         for bunch_i in range(bunch):
 
-            env_temp = atari_py.ALEInterface()
+            env_temp = ALEInterface()
             env_temp.setFloat('repeat_action_probability'.encode('utf-8'), 0.0)
             env_temp.setInt(b'random_seed', bunch_i)
             if test in ['loadROM']:
@@ -79,7 +82,7 @@ def main():
                 if env_temp.game_over():
                     env_temp.reset_game()
 
-            obs = env_temp.getScreenRGB2()
+            obs = env_temp.getScreenRGB()
 
             samples += [obs]
             found_at_bunch = -1
