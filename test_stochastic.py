@@ -1,12 +1,12 @@
 import numpy as np
 import atari_py
 
-# test = 'loadROM'
-test = 'restoreState'
+test = 'loadROM'
+# test = 'restoreState'
 
 frame_skip = 4
 bunch = 200
-sequence = 200
+sequence = 500
 
 def main():
     result = {
@@ -24,6 +24,7 @@ def main():
     # game_list = ['private_eye', 'qbert', 'riverraid', 'road_runner', 'robotank', 'seaquest', 'skiing-n']
     # game_list = ['solaris-n', 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down']
     # game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
+
     game_list = ['pong', 'assault','ms_pacman']
 
     for game in game_list:
