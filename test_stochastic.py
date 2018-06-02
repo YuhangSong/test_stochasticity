@@ -4,11 +4,12 @@ from ale_python_interface import ALEInterface
 import copy
 
 # test = 'loadROM'
-test = 'restoreState'
+# test = 'restoreState'
+test = 'restoreSystemState'
 
 frame_skip = 4
 bunch = 200
-sequence = 0
+sequence = 800
 
 def main():
     result = {
@@ -49,6 +50,8 @@ def main():
 
         if test in ['restoreState']:
             state_after_reset = env_father.cloneState()
+        if test in ['restoreSystemState']:
+            state_after_reset = env_father.cloneSystemState()
 
         print('=====================================================')
         try:
@@ -81,12 +84,14 @@ def main():
         for bunch_i in range(bunch):
 
             env_temp = env_father
-            env_temp.setInt(b'random_seed', bunch_i)
+            env_temp.setInt(b'random_seed', 3)
             if test in ['loadROM']:
                 env_temp.loadROM(game_path)
                 env_temp.reset_game()
             elif test in ['restoreState']:
                 env_temp.restoreState(state_after_reset)
+            elif test in ['restoreSystemState']:
+                env_temp.restoreSystemState(state_after_reset)
 
             for sequence_i in range(sequence):
                 for frame_skip_i in range(frame_skip):
