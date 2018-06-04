@@ -4,21 +4,9 @@ Code for testing the stochasticity of ALE.
 
 ### Requirements
 
-* [numpy]()
+* [numpy](http://www.numpy.org/)
 * [atari-py](https://github.com/openai/atari-py)
 * [Arcade-Learning-Environment](https://github.com/mgbellemare/Arcade-Learning-Environment)
-
-You can install them by:
-```
-pip install numpy atari-py
-```
-
-Note that atari-py by OpenAI should be the same as [the original ALE interface]( https://github.com/bbitmaster/ale_python_interface) (at least for the features we care about here).
-You can also import [the original ALE interface](https://github.com/mgbellemare/Arcade-Learning-Environment) package to run the code. Just change the line of
-```
-import atari_py as ALEInterface
-from ale_python_interface import ALEInterface
-```
 
 ### Run the code
 
