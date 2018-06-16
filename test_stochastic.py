@@ -3,13 +3,13 @@ import numpy as np
 from ale_python_interface import ALEInterface
 import copy
 
-# test = 'loadROM'
-test = 'restoreState'
+test = 'loadROM'
+# test = 'restoreState'
 # test = 'restoreSystemState'
 
 frame_skip = 4
 bunch = 100
-sequence = 4000
+sequence = 0
 
 spaces = '                                                     '
 
@@ -36,7 +36,7 @@ def main():
     # all_game_list = ['montezuma_revenge-n', 'ms_pacman', 'name_this_game', 'phoenix-n', 'pitfall-n', 'pong', 'pooyan-n']
     # all_game_list = ['private_eye', 'qbert', 'riverraid', 'road_runner', 'robotank', 'seaquest', 'skiing-n']
     # all_game_list = ['solaris-n', 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down']
-    # all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
+    all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
 
     # all_game_list = ['pong', 'assault','ms_pacman']
     # all_game_list = ['assault']
@@ -102,6 +102,7 @@ def main():
                 env.restoreSystemState(state_after_reset)
 
             has_terminated = False
+            obs = env.getScreenRGB()
             for sequence_i in range(sequence):
                 obs = env.getScreenRGB()
                 for frame_skip_i in range(frame_skip):
@@ -124,8 +125,9 @@ def main():
                 if has_terminated:
                     break
 
-            if episode_length<0:
-                raise Exception('Did not terminated')
+            if sequence>0:
+                if episode_length<0:
+                    raise Exception('Did not terminated')
 
             if_has_identical_one = False
             for bunch_obs_i in range(len(bunch_obs)):
