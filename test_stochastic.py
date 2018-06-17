@@ -2,6 +2,9 @@ import numpy as np
 
 from ale_python_interface import ALEInterface
 import copy
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
 test = 'loadROM'
 # test = 'restoreState'
@@ -9,7 +12,7 @@ test = 'loadROM'
 
 frame_skip = 4
 bunch = 100
-sequence = 0
+sequence = 50
 
 spaces = '                                                     '
 
@@ -36,10 +39,10 @@ def main():
     # all_game_list = ['montezuma_revenge-n', 'ms_pacman', 'name_this_game', 'phoenix-n', 'pitfall-n', 'pong', 'pooyan-n']
     # all_game_list = ['private_eye', 'qbert', 'riverraid', 'road_runner', 'robotank', 'seaquest', 'skiing-n']
     # all_game_list = ['solaris-n', 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down']
-    all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
+    # all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
 
     # all_game_list = ['pong', 'assault','ms_pacman']
-    # all_game_list = ['assault']
+    all_game_list = ['assault']
 
     for game in all_game_list:
 
@@ -65,7 +68,7 @@ def main():
         print('=====================================================')
         try:
             action_sequence = np.load(
-                'action_sequence_{}_{}.npy'.format(
+                './action_sequence/action_sequence_{}_{}.npy'.format(
                     sequence,
                     game,
                 )
@@ -78,7 +81,7 @@ def main():
                 size = sequence,
             )
             np.save(
-                'action_sequence_{}_{}.npy'.format(
+                './action_sequence/action_sequence_{}_{}.npy'.format(
                     sequence,
                     game,
                 ),
@@ -90,6 +93,7 @@ def main():
         bunch_obs = []
         distribution = []
         episode_length = -1
+        state_metrix = []
         for bunch_i in range(bunch):
 
             if test in ['loadROM']:
@@ -101,10 +105,12 @@ def main():
             elif test in ['restoreSystemState']:
                 env.restoreSystemState(state_after_reset)
 
+            state_sequence = []
+            state_sequence += [env.getScreenRGB()]
+
             has_terminated = False
-            obs = env.getScreenRGB()
             for sequence_i in range(sequence):
-                obs = env.getScreenRGB()
+
                 for frame_skip_i in range(frame_skip):
                     if not has_terminated:
                         env.act(
@@ -117,17 +123,25 @@ def main():
                             has_terminated = True
                     if has_terminated:
                         break
+
                 try:
                     clear_print('[{}|{}|{}]'.format(bunch_i,sequence_i,episode_length))
                 except Exception as e:
                     pass
+
+                state_sequence += [env.getScreenRGB()]
 
                 if has_terminated:
                     break
 
             if sequence>0:
                 if episode_length<0:
-                    raise Exception('Did not terminated')
+                    # raise Exception('Did not terminated')
+                    print('# WARNING: Did not terminated')
+
+            obs = env.getScreenRGB()
+
+            state_metrix += [copy.deepcopy(state_sequence)]
 
             if_has_identical_one = False
             for bunch_obs_i in range(len(bunch_obs)):
@@ -160,6 +174,54 @@ def main():
             grouped_num_list += [grouped_num]
         except Exception as e:
             grouped_num_list = [grouped_num]
+
+        max_lenth = 0
+        for bunch_i in range(len(state_metrix)):
+            if len(state_metrix[bunch_i])>max_lenth:
+                max_lenth = len(state_metrix[bunch_i])
+        for bunch_i in range(len(state_metrix)):
+            state_metrix[bunch_i] += ([np.zeros(shape=state_metrix[0][0].shape, dtype=state_metrix[0][0].dtype)]*(max_lenth-len(state_metrix[bunch_i])))
+
+        state_list = []
+        state_metrix_id = np.zeros((len(state_metrix), len(state_metrix[0])), dtype=int)
+        for bunch_i in range(len(state_metrix)):
+            for sequence_i in range(len(state_metrix[0])):
+                found_in_state_list = False
+                for state_list_id in range(len(state_list)):
+                    if np.max(state_list[state_list_id]-state_metrix[bunch_i][sequence_i])<1:
+                        state_metrix_id[bunch_i][sequence_i] = state_list_id
+                        found_in_state_list = True
+                        break
+                if not found_in_state_list:
+                    state_list += [np.copy(state_metrix[bunch_i][sequence_i])]
+                    state_metrix_id[bunch_i][sequence_i] = (len(state_list)-1)
+
+
+        state_metrix_id = state_metrix_id.tolist()
+        state_metrix_id.sort(key=lambda row: row[:], reverse=True)
+        state_metrix_id = np.array(state_metrix_id)
+
+        fig, ax = plt.subplots()
+        im = ax.imshow(state_metrix_id)
+        plt.show()
+        plt.savefig(
+            './results/{}_state_metrix_id.jpg'.format(game),
+            dpi=600,
+        )
+
+        state_metrix_figure = np.zeros(((10+state_metrix[0][0].shape[0])*len(state_metrix),state_metrix[0][0].shape[1]*len(state_metrix[0]), state_metrix[0][0].shape[2]), dtype=state_metrix[0][0].dtype)
+        for bunch_i in range(len(state_metrix)):
+            for sequence_i in range(len(state_metrix[0])):
+                state_metrix_figure[(10+(bunch_i)*(10+state_metrix[0][0].shape[0])):(bunch_i+1)*(10+state_metrix[0][0].shape[0]),(sequence_i)*state_metrix[0][0].shape[1]:(sequence_i+1)*state_metrix[0][0].shape[1]]=state_list[state_metrix_id[bunch_i][sequence_i]]
+                if bunch_i > 0:
+                    if state_metrix_id[bunch_i][sequence_i] != state_metrix_id[bunch_i-1][sequence_i]:
+                        state_metrix_figure[((bunch_i)*(10+state_metrix[0][0].shape[0])):(10+(bunch_i)*(10+state_metrix[0][0].shape[0])),(sequence_i)*state_metrix[0][0].shape[1]:, 0] = 255
+
+
+        from PIL import Image
+        Image.fromarray(state_metrix_figure).save("./results/{}_state_metrix_figure.jpeg".format(
+            game
+        ))
 
     print(result_str)
     print('===============')
