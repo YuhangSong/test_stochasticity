@@ -23,6 +23,12 @@ def clear_print(string_to_print):
     clear_print_line()
     print(string_to_print,end="\r")
 
+def process_ram(ram):
+    temp = np.transpose(np.stack([ram.tolist()]*int(ram.shape[0]/210.0*160.0)))
+    temp = np.expand_dims(temp, axis=2)
+    temp = np.concatenate((temp,temp,temp), axis=2)
+    return temp
+
 def main():
     result = {
         'name':[],
@@ -94,6 +100,7 @@ def main():
         distribution = []
         episode_length = -1
         state_metrix = []
+        ram_metrix = []
         for bunch_i in range(bunch):
 
             if test in ['loadROM']:
@@ -106,7 +113,9 @@ def main():
                 env.restoreSystemState(state_after_reset)
 
             state_sequence = []
+            ram_sequence = []
             state_sequence += [env.getScreenRGB()]
+            ram_sequence += [process_ram(env.getRAM())]
 
             has_terminated = False
             for sequence_i in range(sequence):
@@ -130,6 +139,7 @@ def main():
                     pass
 
                 state_sequence += [env.getScreenRGB()]
+                ram_sequence += [process_ram(env.getRAM())]
 
                 if has_terminated:
                     break
@@ -142,6 +152,7 @@ def main():
             obs = env.getScreenRGB()
 
             state_metrix += [copy.deepcopy(state_sequence)]
+            ram_metrix += [copy.deepcopy(ram_sequence)]
 
             if_has_identical_one = False
             for bunch_obs_i in range(len(bunch_obs)):
@@ -181,6 +192,7 @@ def main():
                 max_lenth = len(state_metrix[bunch_i])
         for bunch_i in range(len(state_metrix)):
             state_metrix[bunch_i] += ([np.zeros(shape=state_metrix[0][0].shape, dtype=state_metrix[0][0].dtype)]*(max_lenth-len(state_metrix[bunch_i])))
+            ram_metrix  [bunch_i] += ([np.zeros(shape=ram_metrix  [0][0].shape, dtype=ram_metrix  [0][0].dtype)]*(max_lenth-len(state_metrix[bunch_i])))
 
         state_list = []
         state_metrix_id = np.zeros((len(state_metrix), len(state_metrix[0])), dtype=int)
@@ -196,7 +208,7 @@ def main():
                     state_list += [np.copy(state_metrix[bunch_i][sequence_i])]
                     state_metrix_id[bunch_i][sequence_i] = (len(state_list)-1)
 
-
+        state_metrix_id_unsorted = np.copy(state_metrix_id)
         state_metrix_id = state_metrix_id.tolist()
         state_metrix_id.sort(key=lambda row: row[:], reverse=True)
         state_metrix_id = np.array(state_metrix_id)
@@ -210,16 +222,30 @@ def main():
         )
 
         state_metrix_figure = np.zeros(((10+state_metrix[0][0].shape[0])*len(state_metrix),state_metrix[0][0].shape[1]*len(state_metrix[0]), state_metrix[0][0].shape[2]), dtype=state_metrix[0][0].dtype)
+        ram_metrix_figure   = np.zeros(((5 +ram_metrix  [0][0].shape[0])*len(state_metrix),ram_metrix  [0][0].shape[1]*len(state_metrix[0]), ram_metrix  [0][0].shape[2]), dtype=ram_metrix  [0][0].dtype)
+
+        for bunch_i in range(len(state_metrix)):
+            ram_metrix_figure  [((bunch_i)*(5 +ram_metrix  [0][0].shape[0])):(5 +(bunch_i)*(5 +ram_metrix  [0][0].shape[0])),:, 2] = 255
         for bunch_i in range(len(state_metrix)):
             for sequence_i in range(len(state_metrix[0])):
                 state_metrix_figure[(10+(bunch_i)*(10+state_metrix[0][0].shape[0])):(bunch_i+1)*(10+state_metrix[0][0].shape[0]),(sequence_i)*state_metrix[0][0].shape[1]:(sequence_i+1)*state_metrix[0][0].shape[1]]=state_list[state_metrix_id[bunch_i][sequence_i]]
+                for bunch_ii in range(state_metrix_id.shape[0]):
+                    if np.max(state_metrix_id_unsorted[bunch_ii]-state_metrix_id[bunch_i])<1:
+                        at_unsorted_bunch = bunch_ii
+                        break
+                ram_metrix_figure  [(5 +(bunch_i)*(5 +ram_metrix  [0][0].shape[0])):(bunch_i+1)*(5 +ram_metrix  [0][0].shape[0]),(sequence_i)*ram_metrix  [0][0].shape[1]:(sequence_i+1)*ram_metrix  [0][0].shape[1]]=ram_metrix[at_unsorted_bunch][sequence_i]
                 if bunch_i > 0:
                     if state_metrix_id[bunch_i][sequence_i] != state_metrix_id[bunch_i-1][sequence_i]:
                         state_metrix_figure[((bunch_i)*(10+state_metrix[0][0].shape[0])):(10+(bunch_i)*(10+state_metrix[0][0].shape[0])),(sequence_i)*state_metrix[0][0].shape[1]:, 0] = 255
+                        ram_metrix_figure  [((bunch_i)*(5 +ram_metrix  [0][0].shape[0])):(5 +(bunch_i)*(5 +ram_metrix  [0][0].shape[0])),(sequence_i)*ram_metrix  [0][0].shape[1]:, 0] = 255
+                        ram_metrix_figure  [((bunch_i)*(5 +ram_metrix  [0][0].shape[0])):(5 +(bunch_i)*(5 +ram_metrix  [0][0].shape[0])),(sequence_i)*ram_metrix  [0][0].shape[1]:, 1:] = 0
 
 
         from PIL import Image
         Image.fromarray(state_metrix_figure).save("./results/{}_state_metrix_figure.jpeg".format(
+            game
+        ))
+        Image.fromarray(ram_metrix_figure.astype(state_metrix_figure.dtype)).save("./results/{}_ram_metrix_figure.jpeg".format(
             game
         ))
 
