@@ -6,9 +6,8 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-frame_skip = 4
 bunch = 4294967295
-sequence = 5000
+sequence = 1000000
 
 spaces = '                                                     '
 
@@ -43,7 +42,7 @@ def main():
     # all_game_list = ['solaris-n', 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down']
     # all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
 
-    all_game_list = ['assault']
+    all_game_list = ['ice_hockey']
 
     for game in all_game_list:
 
@@ -57,10 +56,7 @@ def main():
 
         env = ALEInterface()
         env.setFloat('repeat_action_probability'.encode('utf-8'), 0.0)
-
-        env.setInt(b'random_seed', 3)
         env.loadROM(game_path)
-        env.reset_game()
 
         print('=====================================================')
         try:
@@ -87,15 +83,22 @@ def main():
             print('action_sequence generated')
         print('=====================================================')
 
-        state_sequence_base = []
-        ram_sequence_base = []
-        has_terminated = False
-        for sequence_i in range(sequence):
+        ram_candidate = np.ones((env.getRAMSize()),dtype=np.uint8)
 
-            state_sequence_base += [env.getScreenRGB()]
-            ram_sequence_base += [env.getRAM()]
+        for bunch_base_i in range(bunch):
 
-            for frame_skip_i in range(frame_skip):
+            env.setInt(b'random_seed', bunch_base_i)
+            env.loadROM(game_path)
+            env.reset_game()
+
+            state_sequence_base = []
+            ram_sequence_base = []
+            has_terminated = False
+            for sequence_i in range(sequence):
+
+                state_sequence_base += [env.getScreenRGB()]
+                ram_sequence_base += [env.getRAM()]
+
                 if not has_terminated:
                     env.act(
                         env.getMinimalActionSet()[
@@ -108,59 +111,53 @@ def main():
                 if has_terminated:
                     break
 
-            if has_terminated:
-                break
+            if has_terminated in [False]:
+                raise Exception('sequence length is not enough')
 
-        if has_terminated in [False]:
-            raise Exception('sequence length is not enough')
+            sequence_length = 0
+            ram_sequence_branch = []
+            for bunch_i in range(bunch):
 
-        ram_candidate = np.ones((env.getRAMSize()),dtype=np.uint8)
+                env.setInt(b'random_seed', bunch_i)
+                env.loadROM(game_path)
+                env.reset_game()
 
+                has_terminated = False
+                for sequence_i in range(sequence):
 
-        state_sequence_branch = []
-        ram_sequence_branch = []
-        for bunch_i in range(bunch):
+                    ram_sequence_branch += [env.getRAM()]
+                    sequence_length += 1
 
-            env.setInt(b'random_seed', bunch_i)
-            env.loadROM(game_path)
-            env.reset_game()
-
-            has_terminated = False
-            for sequence_i in range(sequence):
-
-                state_sequence_branch += [env.getScreenRGB()]
-                ram_sequence_branch += [env.getRAM()]
-
-
-                if sequence_i>0:
-                    max_value = np.max(
-                        np.abs(
-                            env.getScreenRGB()-state_sequence_base[sequence_i]
+                    if sequence_i>0:
+                        max_value = np.max(
+                            np.abs(
+                                env.getScreenRGB()-state_sequence_base[sequence_i]
+                            )
                         )
-                    )
-                    if max_value > 0:
-                        delta_ram = np.sign(np.abs(ram_sequence_branch[sequence_i-1]-ram_sequence_base[sequence_i-1]))
-                        ram_candidate *= delta_ram
-                        remain = np.sum(ram_candidate)
-                        print('remain {} bytes'.format(remain))
-                        if remain <= 1:
-                            if remain == 1:
-                                print(ram_candidate)
-                                np.save(
-                                    './stochasticity_ram_mask/{}.npy'.format(
-                                        game
-                                    ),
-                                    ram_candidate,
-                                )
-                                raise Exception('done')
-                            else:
-                                raise Exception('error')
-                        has_terminated = True
+                        if max_value > 0:
+                            delta_ram = np.sign(np.abs(ram_sequence_branch[sequence_i-1]-ram_sequence_base[sequence_i-1]))
+                            ram_sequence_branch = ram_sequence_branch[-1:] # remove the older one to save memory
+                            ram_candidate *= delta_ram
+                            if np.sum(ram_candidate) <= 1:
+                                if np.sum(ram_candidate) == 1:
+                                    print(ram_candidate)
+                                    np.save(
+                                        './stochasticity_ram_mask/{}.npy'.format(
+                                            game
+                                        ),
+                                        ram_candidate,
+                                    )
+                                    raise Exception('done')
+                                else:
+                                    print(max_value)
+                                    print(delta_ram)
+                                    print(sequence_i)
+                                    raise Exception('error')
+                            has_terminated = True
 
-                if has_terminated:
-                    break
+                    if has_terminated:
+                        break
 
-                for frame_skip_i in range(frame_skip):
                     if not has_terminated:
                         env.act(
                             env.getMinimalActionSet()[
@@ -172,8 +169,13 @@ def main():
                     if has_terminated:
                         break
 
-                if has_terminated:
-                    break
+                if has_terminated in [False]:
+                    raise Exception('sequence length is not enough')
+                else:
+                    print('=====================================================')
+                    print('bunch {}/{}, sequence_length {}, remain {} bytes'.format(bunch_base_i,bunch_i,sequence_length,np.sum(ram_candidate)))
+                    print('=====================================================')
+
 
 if __name__ == "__main__":
     main()

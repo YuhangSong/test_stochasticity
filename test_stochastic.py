@@ -49,7 +49,7 @@ def main():
     # all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
 
     # all_game_list = ['pong', 'assault','ms_pacman']
-    all_game_list = ['assault']
+    all_game_list = ['ice_hockey']
 
     for game in all_game_list:
 
