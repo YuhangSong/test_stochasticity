@@ -7,7 +7,7 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
 frame_skip = 4
-bunch = 1000
+bunch = 4294967295
 sequence = 5000
 
 spaces = '                                                     '
@@ -110,6 +110,9 @@ def main():
 
             if has_terminated:
                 break
+
+        if has_terminated in [False]:
+            raise Exception('sequence length is not enough')
 
         ram_candidate = np.ones((env.getRAMSize()),dtype=np.uint8)
 

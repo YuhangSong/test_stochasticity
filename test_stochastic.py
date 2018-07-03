@@ -73,6 +73,7 @@ def main():
             state_after_reset = env.cloneSystemState()
         if test in ['setRAM']:
             ram_after_reset = env.getRAM()
+            state_after_reset = env.cloneSystemState()
             ram_candidate = np.load(
                 './stochasticity_ram_mask/{}.npy'.format(
                     game
@@ -120,6 +121,8 @@ def main():
             elif test in ['restoreSystemState']:
                 env.restoreSystemState(state_after_reset)
             elif test in ['setRAM']:
+                env.reset_game()
+                env.restoreSystemState(state_after_reset)
                 env.setRAM(ram_after_reset)
                 env.setRAM(
                     env.getRAM()*(1-ram_candidate)+ram_candidate*(bunch_i%255)
@@ -127,8 +130,6 @@ def main():
 
             state_sequence = []
             ram_sequence = []
-            state_sequence += [env.getScreenRGB()]
-            ram_sequence += [process_ram(env.getRAM())]
 
             has_terminated = False
             for sequence_i in range(sequence):
