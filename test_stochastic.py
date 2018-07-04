@@ -11,7 +11,7 @@ test = 'setRAM'
 # test = 'restoreState'
 # test = 'restoreSystemState'
 
-frame_skip = 4
+frame_skip = 4000
 bunch = 100
 sequence = 50
 
@@ -49,7 +49,7 @@ def main():
     # all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
 
     # all_game_list = ['pong', 'assault','ms_pacman']
-    all_game_list = ['ice_hockey']
+    all_game_list = ['assault']
 
     for game in all_game_list:
 
@@ -148,7 +148,7 @@ def main():
                         break
 
                 try:
-                    clear_print('[{}|{}|{}]'.format(bunch_i,sequence_i,episode_length))
+                    print('[{}|{}|{}]'.format(bunch_i,sequence_i,episode_length))
                 except Exception as e:
                     pass
 

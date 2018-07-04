@@ -6,7 +6,8 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-bunch = 4294967295
+bunch = 100
+max_seed = 2147483648
 sequence = 1000000
 
 spaces = '                                                     '
@@ -42,7 +43,7 @@ def main():
     # all_game_list = ['solaris-n', 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down']
     # all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
 
-    all_game_list = ['ice_hockey']
+    all_game_list = ['assault']
 
     for game in all_game_list:
 
@@ -84,10 +85,16 @@ def main():
         print('=====================================================')
 
         ram_candidate = np.ones((env.getRAMSize()),dtype=np.uint8)
+        error_count = 0
 
-        for bunch_base_i in range(bunch):
+        bunch_base_i = 0
 
-            env.setInt(b'random_seed', bunch_base_i)
+        while True:
+
+            bunch_base_i += 1
+
+            base_seed = np.random.randint(0, max_seed,size=1)[0]
+            env.setInt(b'random_seed', base_seed)
             env.loadROM(game_path)
             env.reset_game()
 
@@ -118,7 +125,8 @@ def main():
             ram_sequence_branch = []
             for bunch_i in range(bunch):
 
-                env.setInt(b'random_seed', bunch_i)
+                bunch_seed = np.random.randint(0, max_seed,size=1)[0]
+                env.setInt(b'random_seed', bunch_seed)
                 env.loadROM(game_path)
                 env.reset_game()
 
@@ -128,7 +136,7 @@ def main():
                     ram_sequence_branch += [env.getRAM()]
                     sequence_length += 1
 
-                    if sequence_i>0:
+                    if sequence_i>5:
                         max_value = np.max(
                             np.abs(
                                 env.getScreenRGB()-state_sequence_base[sequence_i]
@@ -136,23 +144,21 @@ def main():
                         )
                         if max_value > 0:
                             delta_ram = np.sign(np.abs(ram_sequence_branch[sequence_i-1]-ram_sequence_base[sequence_i-1]))
-                            ram_sequence_branch = ram_sequence_branch[-1:] # remove the older one to save memory
                             ram_candidate *= delta_ram
-                            if np.sum(ram_candidate) <= 1:
-                                if np.sum(ram_candidate) == 1:
-                                    print(ram_candidate)
-                                    np.save(
-                                        './stochasticity_ram_mask/{}.npy'.format(
-                                            game
-                                        ),
-                                        ram_candidate,
-                                    )
-                                    raise Exception('done')
-                                else:
-                                    print(max_value)
-                                    print(delta_ram)
-                                    print(sequence_i)
-                                    raise Exception('error')
+                            if np.sum(ram_candidate) == 1:
+                                print(ram_candidate)
+                                np.save(
+                                    './stochasticity_ram_mask/{}.npy'.format(
+                                        game
+                                    ),
+                                    ram_candidate,
+                                )
+                                raise Exception('done')
+                            if np.sum(ram_candidate) < 1:
+                                print('error, reinitialize..')
+                                error_count += 1
+                                ram_candidate = np.ones((env.getRAMSize()),dtype=np.uint8)
+
                             has_terminated = True
 
                     if has_terminated:
@@ -173,9 +179,24 @@ def main():
                     raise Exception('sequence length is not enough')
                 else:
                     print('=====================================================')
-                    print('bunch {}/{}, sequence_length {}, remain {} bytes'.format(bunch_base_i,bunch_i,sequence_length,np.sum(ram_candidate)))
+                    print('bunch {}/{}, comparing {}~{}, sequence_length {}, remain {} bytes, error_count {}'.format(
+                            bunch_base_i,
+                            bunch_i,
+                            base_seed,
+                            bunch_seed,
+                            sequence_length,
+                            np.sum(ram_candidate),
+                            error_count,
+                        )
+                    )
                     print('=====================================================')
 
+            np.save(
+                './stochasticity_ram_mask/{}.npy'.format(
+                    game
+                ),
+                ram_candidate,
+            )
 
 if __name__ == "__main__":
     main()
