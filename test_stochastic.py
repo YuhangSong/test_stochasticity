@@ -6,14 +6,14 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-# test = 'loadROM'
-test = 'setRAM'
+test = 'loadROM'
+# test = 'setRAM'
 # test = 'restoreState'
 # test = 'restoreSystemState'
 
-frame_skip = 4
-bunch = 100
-sequence = 50
+frame_skip = 4 # frames to skup at every interaction, during the skipped frames, the same action is taken
+bunch = 100 # how many bunches do you want to test
+sequence = 50 # how lone sequence do you want to use
 
 spaces = '                                                     '
 
@@ -48,8 +48,7 @@ def main():
     # all_game_list = ['solaris-n', 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down']
     # all_game_list = ['venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge-n', 'zaxxon']
 
-    # all_game_list = ['pong', 'assault','ms_pacman']
-    all_game_list = ['ice_hockey']
+    all_game_list = ['assault']
 
     for game in all_game_list:
 

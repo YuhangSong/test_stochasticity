@@ -1,6 +1,4 @@
-# Test Stochasticity of ALE
-
-Code for testing the stochasticity of ALE.
+# Test Stochasticity of ALE (Branch for Kevin)
 
 ### Requirements
 
@@ -10,18 +8,7 @@ Code for testing the stochasticity of ALE.
 
 ### Run the code
 
-To test the stochasticity of loadROM, set ```test = 'loadROM'``` in python file ```test_stochastic.py```, and then run ```python test_stochastic.py```.
-It should produce:
-```
-game:pong grouped_num:1 distribution:[200]
-game:assault grouped_num:57 distribution:[4, 4, 6, 3, 8, 9, 2, 5, 3, 2, 5, 5, 5, 4, 5, 4, 2, 4, 6, 3, 1, 4, 1, 5, 5, 1, 2, 1, 3, 6, 3, 4, 2, 3, 5, 3, 4, 6, 3, 5, 4, 3, 2, 2, 3, 4, 2, 1, 3, 4, 3, 1, 2, 2, 5, 2, 1]
-game:ms_pacman grouped_num:1 distribution:[200]
-```
+Hi, Kevin, please run ```python test_stochastic.py``` in this particular for_kevin branch. On other branches, the code has some other purposes which may cause confusion to you.
 
-To test the stochasticity of restoreState, set ```test = 'restoreState'``` in python file ```test_stochastic.py```, and then run ```python test_stochastic.py```.
-It should produce:
-```
-game:pong grouped_num:1 distribution:[200]
-game:assault grouped_num:1 distribution:[200]
-game:ms_pacman grouped_num:1 distribution:[200]
-```
+In the '''./action_sequence''' dir, their are random generated action sequence I am using to test the stochasticity in ALE, for you task, you may want to replace the random generated actions with actions generated from your agent.
+Besides, the image gets bigger when you are using long action sequence, you may want to take care of that before it makes a mass on your machine.
